@@ -121,12 +121,12 @@ const page = () => {
           <span className="text-[#bc6c25]">AmbaToBuy - Tim 9</span>
         </p>
         <a
-          href="https://instagram.com/your_ig_here"
+          href="https://www.instagram.com/danny_env/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#e09f3e] hover:underline font-bold"
         >
-          @your_ig_here
+          @danny_env
         </a>
       </footer>
     </div>
