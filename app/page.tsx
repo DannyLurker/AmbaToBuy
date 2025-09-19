@@ -26,7 +26,7 @@ const page = () => {
       />
 
       <div className="flex flex-col items-center h-full min-h-screen w-full">
-        <h1 className="text-4xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-tl from-[#dda15e] to-[#bc6c25] mt-28 sm:mt-40">
+        <h1 className="text-4xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-tl from-[#dda15e] to-[#bc6c25] mt-60 sm:mt-80">
           AmbaToBuy
         </h1>
         <p className="text-xl font-bold sm:text-2xl text-transparent bg-clip-text bg-gradient-to-tl from-[#dda15e] to-[#bc6c25] mt-2">
