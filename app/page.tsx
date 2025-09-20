@@ -51,16 +51,10 @@ const page = () => {
           Lihat Produk Kami ✨
         </a>
 
-        <div className="flex mt-7 gap-5 sm:gap-10">
-          <p className="text-[28px] sm:text-[36px] animate-bounce delay-0">
-            🍢
-          </p>
-          <p className="text-[28px] sm:text-[36px] animate-bounce delay-200">
-            🥤
-          </p>
-          <p className="text-[28px] sm:text-[36px] animate-bounce delay-400">
-            🍣
-          </p>
+        <div className="flex mt-7 gap-5 sm:gap-10 stagger-bounce">
+          <span className="text-[28px] sm:text-[36px]">🍢</span>
+          <span className="text-[28px] sm:text-[36px]">🥤</span>
+          <span className="text-[28px] sm:text-[36px]">🍣</span>
         </div>
       </div>
 
@@ -73,7 +67,11 @@ const page = () => {
         <div className="container mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Kentang Spiral */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div
+              className="bg-white rounded-xl shadow-md overflow-hidden 
+                transform transition duration-300 
+                hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+            >
               <img
                 src="./kentang-spiral.jpg"
                 alt="kentang-spiral"
@@ -90,7 +88,11 @@ const page = () => {
             </div>
 
             {/* Sushi */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div
+              className="bg-white rounded-xl shadow-md overflow-hidden 
+                transform transition duration-300 
+                hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+            >
               <img
                 src="./Sushi.png"
                 alt="sushi"
@@ -103,7 +105,11 @@ const page = () => {
             </div>
 
             {/* Jasuke */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div
+              className="bg-white rounded-xl shadow-md overflow-hidden 
+                transform transition duration-300 
+                hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+            >
               <img
                 src="./jasuke.jpg"
                 alt="jasuke"
@@ -116,7 +122,11 @@ const page = () => {
             </div>
 
             {/* Es Milo */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div
+              className="bg-white rounded-xl shadow-md overflow-hidden 
+                transform transition duration-300 
+                hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+            >
               <img
                 src="./milo.jpg"
                 alt="milo"
