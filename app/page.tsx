@@ -143,6 +143,25 @@ const page = () => {
         </div>
       </div>
 
+      {/* Lokasi Sekolah */}
+      <div id="location" className="mb-40 scroll-mt-20">
+        <h1 className="text-center mb-8 text-4xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-tl from-[#dda15e] to-[#bc6c25]">
+          Lokasi Sekolah Kami
+        </h1>
+        <div className="container mx-auto px-4 sm:px-8">
+          <div className="rounded-xl overflow-hidden shadow-lg border-4 border-[#dda15e]">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.505226940615!2d104.01104707473082!3d1.1370523991090188!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31d9896d4a26327b%3A0x7337ffa630e19736!2sSMP%20Advent%20Batam!5e0!3m2!1sen!2sid!4v1726827593706!5m2!1sen!2sid"
+              width="100%"
+              height="400"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
       <footer className="mt-16 bg-[#ffe8ba] py-6 text-center">
         <p className="text-[#606c38] font-semibold">
@@ -155,7 +174,7 @@ const page = () => {
           rel="noopener noreferrer"
           className="text-[#e09f3e] hover:underline font-bold"
         >
-          @danny_env
+          @danny_env & Teams
         </a>
       </footer>
     </div>
