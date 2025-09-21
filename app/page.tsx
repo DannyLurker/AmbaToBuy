@@ -1,6 +1,74 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
+import { FaRegUserCircle, FaLongArrowAltLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  isVerified: boolean;
+};
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  status: number;
+}
 
 const page = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
+
+  const logout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const apiResponse: ApiResponse = await response.json();
+
+      if (apiResponse.success) {
+        setSuccess(apiResponse.message);
+        setIsOpenModal(true);
+        router.push("/");
+      }
+    } catch (e) {}
+  };
+
+  // ambil user saat komponen mount
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          setUser(data.data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        setUser(null);
+      }
+    };
+
+    getUser();
+  }, []);
+
   return (
     <div className="w-full h-full min-h-screen bg-gradient-to-br from-[#fefae0] to-[#faedcd] relative">
       <header className="flex items-center justify-between pl-4 pr-4 h-20 w-full bg-[#fdf0d5] fixed">
@@ -9,13 +77,77 @@ const page = () => {
             Tim 9 - AmbaToBuy
           </a>
         </h1>
-        <a
-          href="#products"
-          className="text-[#e09f3e] hidden sm:block font-semibold mr-8"
-        >
-          Product
-        </a>
+        <div className="flex">
+          <a
+            href="#products"
+            className="text-[#e09f3e] hidden sm:block font-semibold mr-8"
+          >
+            Product
+          </a>
+          <a
+            href="#location"
+            className="text-[#e09f3e] hidden sm:block font-semibold mr-8"
+          >
+            Location
+          </a>
+          <div>
+            {/* Checkbox hidden sebagai trigger modal */}
+            <input type="checkbox" id="user-modal" className="peer hidden" />
+
+            {/* Icon user */}
+            <label htmlFor="user-modal">
+              <FaRegUserCircle className="text-[#e09f3e] text-[30px] sm:block font-semibold mr-8 cursor-pointer" />
+            </label>
+
+            {/* Modal container */}
+            <label
+              htmlFor="user-modal"
+              className="pointer-events-none invisible fixed flex cursor-pointer items-end justify-center overflow-hidden overscroll-contain opacity-0 transition-all duration-300 ease-in-out peer-checked:pointer-events-auto peer-checked:visible peer-checked:opacity-100 peer-checked:[&>*]:translate-y-0 peer-checked:[&>*]:scale-100 right-0 top-[82px] mr-2"
+            >
+              {/* Modal content */}
+              <label
+                htmlFor=""
+                className="h-fit w-64 scale-90 overflow-y-auto overscroll-contain rounded-lg bg-[#d4a373] p-6 text-black shadow-2xl transition"
+              >
+                <h3 className="text-lg font-bold">
+                  {user?.username || "Haven't Login yet"}
+                </h3>
+
+                <div className="mt-4 flex flex-col gap-2">
+                  {user && (
+                    <FaLongArrowAltLeft
+                      className="cursor-pointer text-md"
+                      onClick={logout}
+                    />
+                  )}
+                  {!user && (
+                    <Button className="bg-gradient-to-br from-[#dda15e] to-[#bc6c25] pl-5 pr-5 pt-3 pb-3 rounded-full font-bold text-[#fefae0] cursor-pointer">
+                      <Link href={"/auth/login"}>Login</Link>
+                    </Button>
+                  )}
+                </div>
+              </label>
+            </label>
+          </div>
+        </div>
       </header>
+
+      {isOpenModal && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl shadow-xl backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="font-medium">{success}</span>
+              <button
+                onClick={() => setSuccess(null)}
+                className="ml-auto text-green-600 hover:text-green-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <img
         className="absolute w-10 top-28 left-[10%] rotate-12 sm:w-20 sm:top-32"
