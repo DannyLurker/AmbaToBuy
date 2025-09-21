@@ -80,7 +80,7 @@ const Navbar = ({
                 className="pointer-events-none invisible fixed flex cursor-pointer items-end justify-center 
     opacity-0 transition-all duration-300 ease-in-out
     peer-checked:pointer-events-auto peer-checked:visible peer-checked:opacity-100 
-    peer-checked:[&>*]:translate-y-0 peer-checked:[&>*]:scale-100 right-0 top-[82px] mr-2"
+    peer-checked:[&>*]:translate-y-0 peer-checked:[&>*]:scale-100 md:right-[5%] lg:right-[8%] right-0 top-[82px] mr-2"
               >
                 <label
                   htmlFor=""
@@ -113,12 +113,12 @@ const Navbar = ({
       {/* Mobile Menu */}
       {isOpen && (
         <div
-          className={`fixed left-0 top-0 sm:hidden bg-[#fdf0d5] px-4 pt-2 pb-3 space-y-2 shadow-md  h-screen transition-transform duration-300 ease-in-out
-    ${isOpen ? "translate-y-0 w-[60%]" : "-translate-y-full w-[0%]"}`}
+          className={
+            isOpen
+              ? "left-[0%] top-[100%] absolute md:static bg-[#fdf0d5] md:bg-transparent min-h-[92vh] md:min-h-0 md:top-0 w-[60%] md:w-auto items-start md:items-center px-5 md:px-0 flex flex-col md:flex-row gap-8 md:gap-[4vw] z-10 transition- duration-500 sm:hidden"
+              : "sm:hidden  left-[-100%] top-[100%] absolute md:static bg-[#fdf0d5] md:bg-transparent min-h-[92vh] md:min-h-0 md:top-0 w-[60%] md:w-auto items-start md:items-center px-5 md:px-0 flex flex-col md:flex-row gap-8 md:gap-[4vw] transition duration-500"
+          }
         >
-          <a className="text-[#e09f3e] font-bold text-md mt-4" href="#">
-            Tim 9 - AmbaToBuy
-          </a>
           <a
             href="#"
             className="block text-gray-700 hover:text-[#e09f3e] font-semibold"
