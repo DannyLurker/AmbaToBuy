@@ -40,7 +40,9 @@ const page = () => {
       if (apiResponse.success) {
         setSuccess(apiResponse.message);
         setIsOpenModal(true);
-        router.push("/");
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       }
     } catch (e) {}
   };

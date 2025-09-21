@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { connectToDatabase } from "../../../../lib/mongodb";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -9,12 +10,7 @@ const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
-// Helper function to connect to MongoDB
-async function connectToDatabase() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return { client, db: client.db("Amba-To-Buy") };
-}
+// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 export async function POST(request: NextRequest) {
   let client;
@@ -153,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error:", (error as any)?.stack || error);
     return NextResponse.json(
       {
         success: false,

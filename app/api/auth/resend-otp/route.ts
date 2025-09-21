@@ -1,6 +1,7 @@
 // app/api/auth/resend-otp/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
+import { connectToDatabase } from "../../../../lib/mongodb";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -20,12 +21,7 @@ const EMAIL_CONFIG = {
   },
 };
 
-// Helper function to connect to MongoDB
-async function connectToDatabase() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return { client, db: client.db("Amba-To-Buy") };
-}
+// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 // Helper function to get user from token
 async function getUserFromToken(token: string) {
@@ -175,7 +171,10 @@ export async function POST(request: NextRequest) {
     try {
       await sendVerificationEmail(user.email, verificationCode, user.username);
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      console.error(
+        "Failed to send verification email:",
+        (emailError as any)?.stack || emailError
+      );
       return NextResponse.json(
         {
           success: false,
@@ -194,7 +193,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Resend OTP error:", error);
+    console.error("Resend OTP error:", (error as any)?.stack || error);
     return NextResponse.json(
       {
         success: false,

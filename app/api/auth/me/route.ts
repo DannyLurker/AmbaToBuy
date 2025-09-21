@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { connectToDatabase } from "../../../../lib/mongodb";
 import jwt from "jsonwebtoken";
 
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
-async function connectToDatabase() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return { client, db: client.db("Amba-To-Buy") };
-}
+// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 async function getUserFromToken(token: string) {
   try {
@@ -70,7 +67,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("/api/auth/me error:", error);
+    console.error("/api/auth/me error:", (error as any)?.stack || error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

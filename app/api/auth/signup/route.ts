@@ -1,6 +1,7 @@
 // app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import { connectToDatabase } from "../../../../lib/mongodb";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
@@ -21,12 +22,7 @@ const EMAIL_CONFIG = {
   },
 };
 
-// Helper function to connect to MongoDB
-async function connectToDatabase() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return { client, db: client.db("Amba-To-Buy") };
-}
+// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 // Helper function to generate verification code
 function generateVerificationCode(): string {
@@ -171,7 +167,10 @@ export async function POST(request: NextRequest) {
     try {
       await sendVerificationEmail(email, verificationCode, username);
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      console.error(
+        "Failed to send verification email:",
+        (emailError as any)?.stack || emailError
+      );
       // Don't fail the registration if email fails
     }
 
@@ -217,7 +216,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Signup error:", (error as any)?.stack || error);
     return NextResponse.json(
       {
         success: false,
