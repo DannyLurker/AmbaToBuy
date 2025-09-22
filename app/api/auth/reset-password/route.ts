@@ -1,24 +1,20 @@
 // app/api/auth/reset-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
 import { connectToDatabase } from "../../../../lib/mongodb";
+import { sanitizeAuthInput } from "../../../../lib/sanitize";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// MongoDB connection
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
-
-// Helper function to connect to MongoDB
-// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 export async function POST(request: NextRequest) {
   let client;
 
   try {
     const body = await request.json();
-    const { token, password, passwordConfirm } = body;
+
+    // Sanitize input to prevent NoSQL injection
+    const { token, password, passwordConfirm } = sanitizeAuthInput(body);
 
     // Validation
     if (!token || !password || !passwordConfirm) {
@@ -56,9 +52,9 @@ export async function POST(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Find user by reset token
+    // Find user by reset token - now safe from NoSQL injection
     const user = await db.collection("users").findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: token, // already sanitized
       resetPasswordExpires: { $gt: new Date() }, // Token not expired
     });
 

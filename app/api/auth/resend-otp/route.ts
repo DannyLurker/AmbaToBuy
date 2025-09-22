@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
 import { connectToDatabase } from "../../../../lib/mongodb";
+import { sanitizeString } from "../../../../lib/sanitize";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -20,8 +21,6 @@ const EMAIL_CONFIG = {
     pass: process.env.EMAIL_PASS,
   },
 };
-
-// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 // Helper function to get user from token
 async function getUserFromToken(token: string) {
@@ -96,8 +95,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Sanitize token from cookie
+    const sanitizedToken = sanitizeString(token);
+
     // Decode token to get user info
-    const userFromToken = await getUserFromToken(token);
+    const userFromToken = await getUserFromToken(sanitizedToken);
     if (!userFromToken) {
       return NextResponse.json(
         {
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Find user by ID (try ObjectId) or fallback to email
+    // Find user by ID (try ObjectId) or fallback to email - now safe from NoSQL injection
     let user = null;
     if (userFromToken.userId) {
       try {
@@ -125,9 +127,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user && userFromToken.email) {
+      // Email from token is already validated, but sanitize for safety
+      const sanitizedEmail = sanitizeString(userFromToken.email);
       user = await db
         .collection("users")
-        .findOne({ email: userFromToken.email.toLowerCase() });
+        .findOne({ email: sanitizedEmail.toLowerCase() });
     }
 
     if (!user) {

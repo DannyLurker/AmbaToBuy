@@ -1,14 +1,8 @@
 // app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
 import { connectToDatabase } from "../../../../lib/mongodb";
-import jwt from "jsonwebtoken";
+import { sanitizeAuthInput } from "../../../../lib/sanitize";
 import nodemailer from "nodemailer";
-
-// MongoDB connection
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
 // Email configuration
 const EMAIL_CONFIG = {
@@ -20,9 +14,6 @@ const EMAIL_CONFIG = {
     pass: process.env.EMAIL_PASS,
   },
 };
-
-// Helper function to connect to MongoDB
-// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 // Helper function to generate reset token
 function generateResetToken(): string {
@@ -87,7 +78,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email } = body;
+
+    // Sanitize input to prevent NoSQL injection
+    const { email } = sanitizeAuthInput(body);
 
     // Validation
     if (!email) {
@@ -116,9 +109,9 @@ export async function POST(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Find user by email
+    // Find user by email - now safe from NoSQL injection
     const user = await db.collection("users").findOne({
-      email: email.toLowerCase(),
+      email, // already sanitized
     });
 
     // Always return success for security (don't reveal if email exists)

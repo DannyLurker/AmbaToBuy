@@ -1,14 +1,10 @@
-// app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
 import { connectToDatabase } from "../../../../lib/mongodb";
+import { sanitizeAuthInput } from "../../../../lib/sanitize";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
-// MongoDB connection
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
 // Email configuration
@@ -21,8 +17,6 @@ const EMAIL_CONFIG = {
     pass: process.env.EMAIL_PASS,
   },
 };
-
-// ...using centralized `connectToDatabase` from `lib/mongodb`
 
 // Helper function to generate verification code
 function generateVerificationCode(): string {
@@ -75,7 +69,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { username, email, password, passwordConfirm } = body;
+
+    // Sanitize input to prevent NoSQL injection
+    const { username, email, password, passwordConfirm } =
+      sanitizeAuthInput(body);
 
     // Validation
     if (!username || !email || !password || !passwordConfirm) {
@@ -125,9 +122,9 @@ export async function POST(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Check if user already exists
+    // Check if user already exists - now safe from NoSQL injection
     const existingUser = await db.collection("users").findOne({
-      $or: [{ email }, { username }],
+      $or: [{ email }, { username }], // both email and username are sanitized
     });
 
     if (existingUser) {
@@ -152,7 +149,7 @@ export async function POST(request: NextRequest) {
     // Create user
     const newUser = {
       username,
-      email: email.toLowerCase(),
+      email,
       password: hashedPassword,
       isVerified: false,
       verificationCode,
@@ -178,7 +175,7 @@ export async function POST(request: NextRequest) {
     const token = jwt.sign(
       {
         userId: result.insertedId,
-        email: email.toLowerCase(),
+        email,
         username,
         isVerified: false,
       },
@@ -196,7 +193,7 @@ export async function POST(request: NextRequest) {
           user: {
             id: result.insertedId,
             username,
-            email: email.toLowerCase(),
+            email,
             isVerified: false,
             createdAt: newUser.createdAt,
           },
