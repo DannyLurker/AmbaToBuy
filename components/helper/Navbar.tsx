@@ -30,20 +30,20 @@ const Navbar = ({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center align-middle">
           {/* Logo */}
-          <a className="text-[#e09f3e] font-bold text-lg" href="#">
+          <a className="text-[#e09f3e] font-bold text-lg" href="/#">
             Tim 9 - AmbaToBuy
           </a>
 
           <div className="flex gap-4 mt-1">
             <nav className="hidden sm:flex space-x-6">
               <a
-                href="#products"
+                href="/#products"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Products
               </a>
               <a
-                href="#location"
+                href="/#location"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Location
@@ -120,19 +120,19 @@ const Navbar = ({
           }
         >
           <a
-            href="#products"
+            href="/#products"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Products
           </a>
           <a
-            href="#location"
+            href="/#location"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Location
           </a>
           <Link
-            href="pre-order"
+            href="/pre-order"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Pre-Order
