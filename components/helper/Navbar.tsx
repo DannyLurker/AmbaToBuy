@@ -49,7 +49,7 @@ const Navbar = ({
                 Location
               </a>
               <Link
-                href="#"
+                href="/pre-order"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Pre-Order
@@ -120,20 +120,20 @@ const Navbar = ({
           }
         >
           <a
-            href="#"
-            className="block text-gray-700 hover:text-[#e09f3e] font-semibold"
+            href="#products"
+            className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
-            Dashboard
+            Products
           </a>
           <a
-            href="#"
-            className="block text-gray-700 hover:text-[#e09f3e] font-semibold"
+            href="#location"
+            className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
-            Team
+            Location
           </a>
           <Link
-            href="#"
-            className="block text-gray-700 hover:text-[#e09f3e] font-semibold"
+            href="pre-order"
+            className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Pre-Order
           </Link>
