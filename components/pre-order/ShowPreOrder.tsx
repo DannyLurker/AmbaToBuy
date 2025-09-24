@@ -130,7 +130,7 @@ const ShowPreOrder: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden">
         <div className="text-center space-y-4 max-w-md">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8 text-red-600" />
@@ -154,14 +154,14 @@ const ShowPreOrder: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="text-center mt-32">
+      <div className="text-center mt-28">
         <div className="flex items-center justify-center space-x-3 mb-4">
           <Package className="w-8 h-8 text-[#bc6c25]" />
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#dda15e] to-[#bc6c25]">
             Pre-Order Saya
           </h1>
         </div>
-        <p className="text-[#606c38] text-lg">
+        <p className="text-[#606c38] text-lg mb-8">
           Kelola dan pantau semua pesanan pra-pesan Anda
         </p>
       </div>

@@ -123,7 +123,7 @@ const PreOrderForm = () => {
           {/* Kontak */}
           <div>
             <label className="block text-[#606c38] font-semibold mb-2">
-              Media Sosial / Kontak
+              Media Sosial / Kontak (Untuk konfirmasi ulang)
             </label>
             <input
               type="text"

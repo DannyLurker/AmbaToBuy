@@ -60,7 +60,7 @@ const page = () => {
     getUser();
   }, []);
   return (
-    <div className="w-full h-full min-h-screen bg-gradient-to-br from-[#fefae0] to-[#faedcd] relative">
+    <div className="w-full h-full min-h-screen bg-gradient-to-br from-[#fefae0] to-[#faedcd] relative overflow-hidden">
       <Navbar user={user} onLogout={logout} />
 
       {isOpenModal && (
