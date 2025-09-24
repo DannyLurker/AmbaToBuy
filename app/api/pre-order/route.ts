@@ -6,17 +6,6 @@ import { ObjectId } from "mongodb";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
-type PreOrder = {
-  id: string;
-  userId: string;
-  productName: string;
-  quantity: number;
-  price: number;
-  totalPrice: number;
-  orderDate: string;
-  notes?: string;
-};
-
 // Helper function untuk mendapatkan user dari token
 const getUserFromToken = (request: NextRequest) => {
   try {
@@ -58,6 +47,7 @@ export async function GET(request: NextRequest) {
     const formattedOrders = preOrders.map((order) => ({
       id: order._id.toString(),
       userId: order.userId,
+      contact: order.contant,
       productName: order.productName,
       quantity: order.quantity,
       price: order.price,
@@ -97,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productName, quantity, price, notes } = body;
+    const { productName, quantity, price, notes, contact } = body;
 
     const parseQuality = parseInt(quantity);
 
@@ -114,6 +104,7 @@ export async function POST(request: NextRequest) {
 
     const newPreOrder = {
       userId: user.userId,
+      contact: contact,
       productName: sanitizeString(productName),
       quantity: parseQuality,
       price: parseFloat(price),

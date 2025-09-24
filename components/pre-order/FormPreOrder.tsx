@@ -34,6 +34,7 @@ const PreOrderForm = () => {
           quantity: jumlah,
           price: productPrices[produk],
           notes: catatan,
+          contact: kontak,
         }),
       });
 

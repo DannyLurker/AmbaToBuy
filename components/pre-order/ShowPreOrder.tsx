@@ -7,6 +7,7 @@ import CancelModal from "../modals/CancelPreOrderModal";
 type PreOrder = {
   id: string;
   productName: string;
+  contact: string;
   quantity: number;
   price: number;
   totalPrice: number;
@@ -189,7 +190,7 @@ const ShowPreOrder: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {preOrders.map((order) => (
               <PreOrderCard
                 key={order.id}

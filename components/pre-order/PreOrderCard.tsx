@@ -6,6 +6,7 @@ import { Calendar, Package, Trash2 } from "lucide-react";
 type PreOrder = {
   id: string;
   productName: string;
+  contact: string;
   quantity: number;
   price: number;
   totalPrice: number;
@@ -19,32 +20,6 @@ type PreOrderCardProps = {
 };
 
 const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "confirmed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Menunggu";
-      case "confirmed":
-        return "Dikonfirmasi";
-      case "cancelled":
-        return "Dibatalkan";
-      default:
-        return status;
-    }
-  };
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -96,7 +71,7 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
             </div>
 
             {preOrder.notes && (
-              <div className="bg-[#fefae0] p-2 rounded-lg border border-[#dda15e]/30">
+              <div className="bg-[#fefae0] p-2 rounded-lg border border-[#dda15e]/30 mb-2">
                 <p className="text-sm text-[#606c38]">
                   <span className="font-semibold">Catatan:</span>{" "}
                   {preOrder.notes}
@@ -107,15 +82,19 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
         </div>
 
         {/* Order Info */}
-        <div className="mt-4 pt-4 border-t border-[#dda15e]/20">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center space-x-2 text-[#606c38]">
-              <Calendar className="w-4 h-4" />
-              <div>
-                <p className="font-medium">Tanggal Pesan</p>
-                <p>{formatDate(preOrder.orderDate)}</p>
-              </div>
+        <div className="grid grid-cols-2 gap-4 text-sm text-[#606c38]">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4" />
+            <div>
+              <p className="font-medium">Tanggal Pesan</p>
+              <p>{formatDate(preOrder.orderDate)}</p>
             </div>
+          </div>
+          <div>
+            <p className="font-medium">Contact</p>
+            <p className="font-medium">
+              {preOrder.contact || "Can't be displayed"}
+            </p>
           </div>
         </div>
 
