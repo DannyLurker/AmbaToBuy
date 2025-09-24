@@ -4,6 +4,7 @@ import Navbar from "@/components/helper/Navbar";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import ShowPreOrder from "@/components/pre-order/ShowPreOrder";
+import { Footer } from "@/components/helper/Footer";
 
 type User = {
   id: string;
@@ -80,6 +81,8 @@ const page = () => {
       )}
 
       <ShowPreOrder />
+
+      <Footer />
     </div>
   );
 };

@@ -36,18 +36,18 @@ const Navbar = ({
 
           <div className="flex gap-4 mt-1">
             <nav className="hidden sm:flex space-x-6">
-              <a
+              <Link
                 href="/#products"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Products
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/#location"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Location
-              </a>
+              </Link>
               <Link
                 href="/pre-order"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
@@ -119,18 +119,18 @@ const Navbar = ({
               : "sm:hidden  left-[-100%] top-[100%] absolute md:static bg-[#fdf0d5] md:bg-transparent min-h-[92vh] md:min-h-0 md:top-0 w-[60%] md:w-auto items-start md:items-center px-5 md:px-0 flex flex-col md:flex-row gap-8 md:gap-[4vw] transition duration-500"
           }
         >
-          <a
+          <Link
             href="/#products"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Products
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#location"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Location
-          </a>
+          </Link>
           <Link
             href="/pre-order"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
