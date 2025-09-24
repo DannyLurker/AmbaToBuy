@@ -49,10 +49,16 @@ const Navbar = ({
                 Location
               </Link>
               <Link
-                href="/pre-order"
+                href="/pre-order/pre-order-form"
                 className="text-gray-700 hover:text-[#e09f3e] font-semibold"
               >
                 Pre-Order
+              </Link>
+              <Link
+                href="/pre-order/pre-order-cart"
+                className="text-gray-700 hover:text-[#e09f3e] font-semibold"
+              >
+                Cart
               </Link>
             </nav>
 
@@ -132,10 +138,16 @@ const Navbar = ({
             Location
           </Link>
           <Link
-            href="/pre-order"
+            href="/pre-order/pre-order-form"
             className="text-gray-700 hover:text-[#e09f3e] font-semibold"
           >
             Pre-Order
+          </Link>
+          <Link
+            href="/pre-order/pre-order-cart"
+            className="text-gray-700 hover:text-[#e09f3e] font-semibold"
+          >
+            Cart
           </Link>
         </div>
       )}
