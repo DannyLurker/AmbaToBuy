@@ -7,6 +7,7 @@ import SushiModal from "@/components/modals/SushiModal";
 import KentangModal from "@/components/modals/KentangModal";
 import MiloModal from "@/components/modals/MiloModal";
 import JasukeModal from "@/components/modals/JasukeModal";
+import { Footer } from "@/components/helper/Footer";
 
 type User = {
   id: string;
@@ -275,20 +276,7 @@ const page = () => {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 bg-[#ffe8ba] py-6 text-center">
-        <p className="text-[#606c38] font-semibold">
-          Web ini dibuat oleh{" "}
-          <span className="text-[#bc6c25]">AmbaToBuy - Tim 9</span>
-        </p>
-        <a
-          href="https://www.instagram.com/danny_env/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#e09f3e] hover:underline font-bold"
-        >
-          @danny_env & Teams
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 };
