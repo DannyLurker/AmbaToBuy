@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/helper/Navbar";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import SushiModal from "@/components/modals/SushiModal";
+import KentangModal from "@/components/modals/KentangModal";
+import MiloModal from "@/components/modals/MiloModal";
+import JasukeModal from "@/components/modals/JasukeModal";
 
 type User = {
   id: string;
@@ -15,6 +19,11 @@ const page = () => {
   const [user, setUser] = useState<User | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isKentangModal, setIsKentangModal] = useState(false);
+  const [isSushiModal, setIsSushiModal] = useState(false);
+  const [isMiloModal, setIsMiloModal] = useState(false);
+  const [isJasukeModal, setIsJasukeModal] = useState(false);
+
   const router = useRouter();
 
   const logout = async () => {
@@ -78,6 +87,17 @@ const page = () => {
           </div>
         </div>
       )}
+
+      <KentangModal
+        open={isKentangModal}
+        onClose={() => setIsKentangModal(false)}
+      />
+      <SushiModal open={isSushiModal} onClose={() => setIsSushiModal(false)} />
+      <JasukeModal
+        open={isJasukeModal}
+        onClose={() => setIsJasukeModal(false)}
+      />
+      <MiloModal open={isMiloModal} onClose={() => setIsMiloModal(false)} />
 
       <img
         className="absolute w-10 top-28 left-[10%] rotate-12 sm:w-20 sm:top-32"
@@ -143,9 +163,15 @@ const page = () => {
                 <h3 className="text-lg font-semibold text-[#bc6c25]">
                   Kentang Spiral
                 </h3>
-                <h2 className="text-[#606c38] font-bold">
-                  Rp 5.000 - Rp 10.000
-                </h2>
+                <h2 className="text-[#606c38] font-bold">Rp 12.000</h2>
+                <button
+                  onClick={() => setIsKentangModal(true)}
+                  className="mt-3 bg-gradient-to-br from-[#dda15e] to-[#bc6c25] 
+             text-[#fefae0] font-bold py-2 px-4 rounded-full 
+             hover:opacity-90 hover:scale-105 transition-all duration-300"
+                >
+                  Information
+                </button>
               </div>
             </div>
 
@@ -163,6 +189,14 @@ const page = () => {
               <div className="p-4 text-center">
                 <h3 className="text-lg font-semibold text-[#bc6c25]">Sushi</h3>
                 <h2 className="text-[#606c38] font-bold">Rp 2.000/each</h2>
+                <button
+                  onClick={() => setIsSushiModal(true)}
+                  className="mt-3 bg-gradient-to-br from-[#dda15e] to-[#bc6c25] 
+             text-[#fefae0] font-bold py-2 px-4 rounded-full 
+             hover:opacity-90 hover:scale-105 transition-all duration-300"
+                >
+                  Information
+                </button>
               </div>
             </div>
 
@@ -180,6 +214,14 @@ const page = () => {
               <div className="p-4 text-center">
                 <h3 className="text-lg font-semibold text-[#bc6c25]">Jasuke</h3>
                 <h2 className="text-[#606c38] font-bold">Rp 5.000</h2>
+                <button
+                  onClick={() => setIsJasukeModal(true)}
+                  className="mt-3 bg-gradient-to-br from-[#dda15e] to-[#bc6c25] 
+             text-[#fefae0] font-bold py-2 px-4 rounded-full 
+             hover:opacity-90 hover:scale-105 transition-all duration-300"
+                >
+                  Information
+                </button>
               </div>
             </div>
 
@@ -199,6 +241,14 @@ const page = () => {
                   Es Milo
                 </h3>
                 <h2 className="text-[#606c38] font-bold">Rp 5.000</h2>
+                <button
+                  onClick={() => setIsMiloModal(true)}
+                  className="mt-3 bg-gradient-to-br from-[#dda15e] to-[#bc6c25] 
+             text-[#fefae0] font-bold py-2 px-4 rounded-full 
+             hover:opacity-90 hover:scale-105 transition-all duration-300"
+                >
+                  Information
+                </button>
               </div>
             </div>
           </div>
