@@ -1,18 +1,15 @@
 // components/pre-order/PreOrderCard.tsx
 "use client";
 import React from "react";
-import { Calendar, Clock, Package, Trash2 } from "lucide-react";
+import { Calendar, Package, Trash2 } from "lucide-react";
 
 type PreOrder = {
   id: string;
   productName: string;
-  productImage: string;
   quantity: number;
   price: number;
   totalPrice: number;
-  status: "pending" | "confirmed" | "cancelled";
   orderDate: string;
-  estimatedDelivery: string;
   notes?: string;
 };
 
@@ -75,26 +72,10 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
             Pre-Order #{preOrder.id.slice(-6)}
           </h3>
         </div>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
-            preOrder.status
-          )}`}
-        >
-          {getStatusText(preOrder.status)}
-        </span>
       </div>
 
       <div className="p-4">
         <div className="flex space-x-4">
-          {/* Product Image */}
-          <div className="flex-shrink-0">
-            <img
-              src={preOrder.productImage}
-              alt={preOrder.productName}
-              className="w-20 h-20 object-cover rounded-lg border-2 border-[#dda15e]/30"
-            />
-          </div>
-
           {/* Product Details */}
           <div className="flex-1 space-y-2">
             <h4 className="text-xl font-bold text-[#bc6c25]">
@@ -104,7 +85,7 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
             <div className="flex items-center justify-between text-sm text-[#606c38]">
               <span>Jumlah: {preOrder.quantity}x</span>
               <span className="font-semibold">
-                @ {formatPrice(preOrder.price)}
+                {formatPrice(preOrder.price)}
               </span>
             </div>
 
@@ -135,29 +116,20 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
                 <p>{formatDate(preOrder.orderDate)}</p>
               </div>
             </div>
-
-            <div className="flex items-center space-x-2 text-[#606c38]">
-              <Clock className="w-4 h-4" />
-              <div>
-                <p className="font-medium">Estimasi Selesai</p>
-                <p>{formatDate(preOrder.estimatedDelivery)}</p>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Action Button */}
-        {preOrder.status === "pending" && (
-          <div className="mt-4 pt-4 border-t border-[#dda15e]/20">
-            <button
-              onClick={() => onCancel(preOrder.id)}
-              className="w-full flex items-center justify-center space-x-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Batalkan Pesanan</span>
-            </button>
-          </div>
-        )}
+
+        <div className="mt-4 pt-4 border-t border-[#dda15e]/20">
+          <button
+            onClick={() => onCancel(preOrder.id)}
+            className="w-full flex items-center justify-center space-x-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Batalkan Pesanan</span>
+          </button>
+        </div>
       </div>
     </div>
   );

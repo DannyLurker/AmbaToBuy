@@ -1,4 +1,3 @@
-// components/pre-order/ShowPreOrder.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import { Package, ShoppingBag, AlertCircle, RefreshCw } from "lucide-react";
@@ -8,13 +7,10 @@ import CancelModal from "../modals/CancelPreOrderModal";
 type PreOrder = {
   id: string;
   productName: string;
-  productImage: string;
   quantity: number;
   price: number;
   totalPrice: number;
-  status: "pending" | "confirmed" | "cancelled";
   orderDate: string;
-  estimatedDelivery: string;
   notes?: string;
 };
 
@@ -84,18 +80,8 @@ const ShowPreOrder: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Bisa pakai optimistic update
-        setPreOrders((prev) =>
-          prev.map((order) =>
-            order.id === cancelModal.orderId
-              ? { ...order, status: "cancelled" as const }
-              : order
-          )
-        );
-
-        // Atau lebih aman refetch ulang
+        // Setelah cancel, langsung refetch ulang data
         await fetchPreOrders();
-
         closeCancelModal();
       } else {
         setError(data.message || "Failed to cancel pre-order");
@@ -108,7 +94,6 @@ const ShowPreOrder: React.FC = () => {
     }
   };
 
-  // Open cancel modal
   const openCancelModal = (orderId: string) => {
     const order = preOrders.find((o) => o.id === orderId);
     if (order) {
@@ -120,7 +105,6 @@ const ShowPreOrder: React.FC = () => {
     }
   };
 
-  // Close cancel modal
   const closeCancelModal = () => {
     setCancelModal({
       isOpen: false,
@@ -129,19 +113,9 @@ const ShowPreOrder: React.FC = () => {
     });
   };
 
-  // Load data on component mount
   useEffect(() => {
     fetchPreOrders();
   }, []);
-
-  // Filter orders by status
-  const pendingOrders = preOrders.filter((order) => order.status === "pending");
-  const confirmedOrders = preOrders.filter(
-    (order) => order.status === "confirmed"
-  );
-  const cancelledOrders = preOrders.filter(
-    (order) => order.status === "cancelled"
-  );
 
   if (loading) {
     return (
@@ -215,86 +189,15 @@ const ShowPreOrder: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-800">
-                {pendingOrders.length}
-              </div>
-              <div className="text-yellow-600 font-medium">
-                Menunggu Konfirmasi
-              </div>
-            </div>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-800">
-                {confirmedOrders.length}
-              </div>
-              <div className="text-green-600 font-medium">Dikonfirmasi</div>
-            </div>
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-red-800">
-                {cancelledOrders.length}
-              </div>
-              <div className="text-red-600 font-medium">Dibatalkan</div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {preOrders.map((order) => (
+              <PreOrderCard
+                key={order.id}
+                preOrder={order}
+                onCancel={openCancelModal}
+              />
+            ))}
           </div>
-
-          {/* Pending Orders */}
-          {pendingOrders.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-semibold text-[#bc6c25] mb-4 flex items-center space-x-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span>Menunggu Konfirmasi ({pendingOrders.length})</span>
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {pendingOrders.map((order) => (
-                  <PreOrderCard
-                    key={order.id}
-                    preOrder={order}
-                    onCancel={openCancelModal}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Confirmed Orders */}
-          {confirmedOrders.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-semibold text-[#bc6c25] mb-4 flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Dikonfirmasi ({confirmedOrders.length})</span>
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {confirmedOrders.map((order) => (
-                  <PreOrderCard
-                    key={order.id}
-                    preOrder={order}
-                    onCancel={openCancelModal}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Cancelled Orders */}
-          {cancelledOrders.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-semibold text-[#bc6c25] mb-4 flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span>Dibatalkan ({cancelledOrders.length})</span>
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {cancelledOrders.map((order) => (
-                  <PreOrderCard
-                    key={order.id}
-                    preOrder={order}
-                    onCancel={openCancelModal}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
         </div>
       )}
 

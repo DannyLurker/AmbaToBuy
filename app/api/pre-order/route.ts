@@ -10,13 +10,10 @@ type PreOrder = {
   id: string;
   userId: string;
   productName: string;
-  productImage: string;
   quantity: number;
   price: number;
   totalPrice: number;
-  status: "pending" | "confirmed" | "cancelled";
   orderDate: string;
-  estimatedDelivery: string;
   notes?: string;
 };
 
@@ -62,13 +59,10 @@ export async function GET(request: NextRequest) {
       id: order._id.toString(),
       userId: order.userId,
       productName: order.productName,
-      productImage: order.productImage,
       quantity: order.quantity,
       price: order.price,
       totalPrice: order.totalPrice,
-      status: order.status,
       orderDate: order.orderDate,
-      estimatedDelivery: order.estimatedDelivery,
       notes: order.notes,
       createdAt: order.createdAt,
     }));
@@ -103,9 +97,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productName, productImage, quantity, price, notes } = body;
+    const { productName, quantity, price, notes } = body;
 
-    if (!productName || !quantity || !price) {
+    const parseQuality = parseInt(quantity);
+
+    if (!productName || !parseQuality || !price) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 }
@@ -119,17 +115,10 @@ export async function POST(request: NextRequest) {
     const newPreOrder = {
       userId: user.userId,
       productName: sanitizeString(productName),
-      productImage: sanitizeString(
-        productImage || "/images/default-product.jpg"
-      ),
-      quantity: parseInt(quantity),
+      quantity: parseQuality,
       price: parseFloat(price),
-      totalPrice: parseInt(quantity) * parseFloat(price),
-      status: "pending",
+      totalPrice: parseQuality * parseFloat(price),
       orderDate: new Date().toISOString().split("T")[0],
-      estimatedDelivery: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
       notes: notes ? sanitizeString(notes) : "",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -186,21 +175,12 @@ export async function DELETE(request: NextRequest) {
     client = dbClient;
 
     // Find and update the pre-order
-    const result = await db.collection("preorders").findOneAndUpdate(
-      {
-        _id: new ObjectId(orderId),
-        userId: user.userId,
-      },
-      {
-        $set: {
-          status: "cancelled",
-          updatedAt: new Date(),
-        },
-      },
-      { returnDocument: "after" }
-    );
+    const result = await db.collection("preorders").deleteOne({
+      _id: new ObjectId(orderId),
+      userId: user.userId,
+    });
 
-    if (!result) {
+    if (result.deletedCount === 0) {
       return NextResponse.json(
         { success: false, message: "Pre-order not found" },
         { status: 404 }
@@ -209,11 +189,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Pre-order cancelled successfully",
-      data: {
-        id: result._id.toString(),
-        ...result,
-      },
+      message: "Pre-order cancelled (deleted) successfully",
     });
   } catch (error) {
     console.error("Cancel pre-order error:", error);
