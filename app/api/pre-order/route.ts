@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const formattedOrders = preOrders.map((order) => ({
       id: order._id.toString(),
       userId: order.userId,
-      contact: order.contant,
+      contact: order.contact,
       productName: order.productName,
       quantity: order.quantity,
       price: order.price,
