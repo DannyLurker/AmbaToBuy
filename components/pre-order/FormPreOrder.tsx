@@ -329,10 +329,6 @@ const PreOrderForm = () => {
               disabled={loading}
             >
               <option value="">-- Pilih Produk --</option>
-              <option value="kentang">
-                Kentang Spiral (Rp{" "}
-                {productPrices.kentang.toLocaleString("id-ID")})
-              </option>
               <option value="sushi">
                 Sushi 1 Kotak isi 5 (Rp{" "}
                 {productPrices.sushi.toLocaleString("id-ID")})
