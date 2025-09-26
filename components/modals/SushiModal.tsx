@@ -10,7 +10,7 @@ export default function SushiModal({ open, onClose }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0  flex justify-center items-center z-50">
+    <div className="fixed inset-0 flex justify-center items-center z-50">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -32,8 +32,8 @@ export default function SushiModal({ open, onClose }: Props) {
 
         <h2 className="text-2xl font-bold text-[#bc6c25]">Sushi</h2>
         <p className="text-[#606c38] mt-2">
-          Sushi fresh isi telur, sosis, timun. Harga murah hanya Rp 2.000 per
-          pcs 🍣
+          Sushi fresh isi telur, sosis, timun dan wortel. Harga murah hanya Rp
+          2.000 per pcs 🍣
         </p>
         <p className="mt-3 font-bold text-lg">Rp 2.000/each</p>
       </div>
