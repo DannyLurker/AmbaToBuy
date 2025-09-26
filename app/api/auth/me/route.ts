@@ -3,15 +3,14 @@ import { connectToDatabase } from "../../../../lib/mongodb";
 import { sanitizeString } from "../../../../lib/sanitize";
 import jwt from "jsonwebtoken";
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/ambatobuy";
 const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-key";
 
 async function getUserFromToken(token: string) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     return decoded;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("JWT verification error:", error.message);
     return null;
   }
 }
@@ -19,10 +18,13 @@ async function getUserFromToken(token: string) {
 export async function GET(request: NextRequest) {
   let client;
   try {
+    // Get token from cookies with better error handling
     const token = request.cookies.get("auth-token")?.value;
+
     if (!token) {
+      console.log("No auth token found in cookies");
       return NextResponse.json(
-        { success: false, message: "Authentication required" },
+        { success: false, message: "No authentication token found" },
         { status: 401 }
       );
     }
@@ -30,12 +32,33 @@ export async function GET(request: NextRequest) {
     // Sanitize token from cookie
     const sanitizedToken = sanitizeString(token);
 
-    const userFromToken = await getUserFromToken(sanitizedToken);
-    if (!userFromToken) {
+    if (!sanitizedToken || sanitizedToken.length < 10) {
+      console.log("Invalid or corrupted token");
       return NextResponse.json(
-        { success: false, message: "Invalid token" },
+        { success: false, message: "Invalid authentication token" },
         { status: 401 }
       );
+    }
+
+    const userFromToken = await getUserFromToken(sanitizedToken);
+    if (!userFromToken) {
+      console.log("Token verification failed");
+
+      // Clear invalid cookie
+      const response = NextResponse.json(
+        { success: false, message: "Invalid or expired token" },
+        { status: 401 }
+      );
+
+      response.cookies.set("auth-token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: new Date(0),
+        path: "/",
+      });
+
+      return response;
     }
 
     const { client: dbClient, db } = await connectToDatabase();
@@ -44,17 +67,36 @@ export async function GET(request: NextRequest) {
     // Sanitize email from token for database query
     const sanitizedEmail = sanitizeString(userFromToken.email);
 
-    // Prefer to find user by email (robust against token id serialization differences)
+    // Find user in database
     const user = await db
       .collection("users")
       .findOne({ email: sanitizedEmail.toLowerCase() });
 
     if (!user) {
-      return NextResponse.json(
+      console.log("User not found in database:", sanitizedEmail);
+
+      // Clear cookie for non-existent user
+      const response = NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 }
       );
+
+      response.cookies.set("auth-token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: new Date(0),
+        path: "/",
+      });
+
+      return response;
     }
+
+    console.log("User found:", {
+      id: user._id,
+      email: user.email,
+      verified: user.isVerified,
+    });
 
     return NextResponse.json(
       {
@@ -65,18 +107,29 @@ export async function GET(request: NextRequest) {
             username: user.username,
             email: user.email,
             isVerified: !!user.isVerified,
+            createdAt: user.createdAt,
           },
         },
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("/api/auth/me error:", (error as any)?.stack || error);
-    return NextResponse.json(
-      { success: false, message: "Internal server error" },
+  } catch (error: any) {
+    console.error("/api/auth/me error:", error?.stack || error);
+
+    // Clear potentially corrupted cookie on server error
+    const response = NextResponse.json(
+      { success: false, message: "Authentication check failed" },
       { status: 500 }
     );
+
+    return response;
   } finally {
-    if (client) await client.close();
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error("Error closing database connection:", closeError);
+      }
+    }
   }
 }
