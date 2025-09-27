@@ -12,6 +12,7 @@ type PreOrder = {
   totalPrice: number;
   orderDate: string;
   notes?: string;
+  status: string;
 };
 
 type PreOrderCardProps = {
@@ -37,6 +38,17 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
     });
   };
 
+  const getStatusStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-[1px] border-yellow-300";
+      case "completed":
+        return "bg-green-100 text-green-800 border-[1px] border-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-[1px] border-gray-300";
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-[#dda15e]/20">
       {/* Header with Status */}
@@ -46,6 +58,13 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
           <h3 className="font-semibold text-[#bc6c25]">
             Pre-Order #{preOrder.id.slice(-6)}
           </h3>
+        </div>
+        <div
+          className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusStyle(
+            preOrder.status
+          )}`}
+        >
+          {preOrder.status}
         </div>
       </div>
 

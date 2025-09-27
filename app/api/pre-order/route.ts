@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       totalPrice: order.totalPrice,
       orderDate: order.orderDate,
       notes: order.notes,
+      status: order.status,
       createdAt: order.createdAt,
     }));
 
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
       totalPrice: parseQuality * parseFloat(price),
       orderDate: new Date().toISOString().split("T")[0],
       notes: notes ? sanitizeString(notes) : "",
+      status: "pending",
       createdAt: new Date(),
       updatedAt: new Date(),
     };

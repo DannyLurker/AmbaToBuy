@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
       email,
       password: hashedPassword,
       isVerified: false,
+      role: "student",
       verificationCode,
       verificationExpires,
       createdAt: new Date(),

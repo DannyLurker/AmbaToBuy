@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
             id: user._id,
             username: user.username,
             email: user.email,
+            role: user.role,
             isVerified: !!user.isVerified,
             createdAt: user.createdAt,
           },
