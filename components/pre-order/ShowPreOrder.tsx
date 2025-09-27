@@ -13,6 +13,7 @@ type PreOrder = {
   totalPrice: number;
   orderDate: string;
   notes?: string;
+  status: string;
 };
 
 type CancelModalState = {
