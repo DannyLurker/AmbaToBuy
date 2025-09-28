@@ -9,13 +9,8 @@ type User = {
   username: string;
   email: string;
   isVerified: boolean;
+  role: string;
 };
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  status: number;
-}
 
 const Navbar = ({
   user,
@@ -92,9 +87,19 @@ const Navbar = ({
                   htmlFor=""
                   className="h-fit w-64 scale-90 overflow-y-auto rounded-lg bg-[#d4a373] p-6 text-black shadow-2xl transition"
                 >
-                  <h3 className="text-lg font-bold">
+                  <h3 className="text-lg font-bold mb-2">
                     {user?.username || "Haven't Login yet"}
                   </h3>
+
+                  {user?.role === "admin" && (
+                    <Link
+                      href="/admin-page"
+                      className="px-3 py-1.5 rounded-md font-medium text-white bg-gradient-to-r from-[#e49e4e] to-[#dda15e]border border-[#fca311] shadow-sm hover:from-[#fca311] hover:to-[#e49e4e] hover:shadow-md transition-all duration-200
+  "
+                    >
+                      Admin Page
+                    </Link>
+                  )}
 
                   <div className="mt-4 flex flex-col gap-2">
                     {user && (

@@ -2,20 +2,72 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/helper/Navbar";
-import { X } from "lucide-react";
-import { Footer } from "@/components/helper/Footer";
+import {
+  Package,
+  Search,
+  Download,
+  CheckCircle,
+  XCircle,
+  Clock,
+  RefreshCw,
+  AlertTriangle,
+  X,
+} from "lucide-react";
+import Navbar from "../helper/Navbar";
+
+// Types
+type PreOrder = {
+  id: string;
+  userId: string;
+  contact: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  totalPrice: number;
+  notes?: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  createdAt: string;
+};
+
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  isVerified: boolean;
+};
+
+type FilterStatus = "all" | "pending" | "confirmed" | "completed" | "cancelled";
 
 const ShowPreOrderForAdmin = () => {
   const router = useRouter();
-  const [nama, setNama] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [preOrders, setPreOrders] = useState<PreOrder[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<PreOrder[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState("");
   const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
 
+  // Filter and Search States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [selectedProduct, setSelectedProduct] = useState<string>("all");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  // Statistics
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+  });
+
+  // Authentication check
   useEffect(() => {
     const checkUserAuth = async () => {
       setAuthLoading(true);
@@ -36,20 +88,21 @@ const ShowPreOrderForAdmin = () => {
         }
 
         const data = await res.json();
-        console.log("Auth check response:", data); // Debug log
 
         if (data?.success && data?.data?.user && data.data.user.id) {
+          if (data.data.user.role !== "admin") {
+            setAuthError(
+              "Akses ditolak. Hanya admin yang dapat mengakses halaman ini."
+            );
+            setTimeout(() => router.push("/"), 2000);
+            return;
+          }
+
           setIsAuthenticated(true);
           setUser(data.data.user);
-          // Auto-fill nama jika tersedia dari user data
-          if (data.data.user.username && !nama) {
-            setNama(data.data.user.username);
-          }
         } else {
-          console.log("Auth failed:", data); // Debug log
           setIsAuthenticated(false);
           setAuthError("Session tidak valid. Silakan login kembali.");
-          // Delay redirect untuk memberi waktu user membaca pesan
           setTimeout(() => {
             router.push(
               "/auth/login?redirect=" +
@@ -61,37 +114,183 @@ const ShowPreOrderForAdmin = () => {
         console.error("Auth check failed:", error);
         setIsAuthenticated(false);
         setAuthError("Gagal memverifikasi session. Silakan login.");
-
-        // Handle different error scenarios
-        if (error.message.includes("401") || error.message.includes("403")) {
-          setTimeout(() => {
-            router.push(
-              "/auth/login?redirect=" +
-                encodeURIComponent(window.location.pathname)
-            );
-          }, 2000);
-        } else {
-          // Network atau server error
-          setTimeout(() => {
-            router.push(
-              "/auth/login?error=connection&redirect=" +
-                encodeURIComponent(window.location.pathname)
-            );
-          }, 3000);
-        }
+        setTimeout(() => {
+          router.push(
+            "/auth/login?redirect=" +
+              encodeURIComponent(window.location.pathname)
+          );
+        }, 2000);
       } finally {
         setAuthLoading(false);
       }
     };
 
     checkUserAuth();
-
-    // Set up periodic auth check (setiap 2 menit untuk lebih responsif)
-    const authInterval = setInterval(checkUserAuth, 2 * 60 * 1000);
-
-    return () => clearInterval(authInterval);
   }, [router]);
 
+  // Fetch pre-orders
+  const fetchPreOrders = async () => {
+    if (!isAuthenticated) return;
+
+    setDataLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin-api", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      console.log(data);
+
+      if (!data.success) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      if (data.success) {
+        setPreOrders(data.data);
+        calculateStats(data.data);
+      } else {
+        setError(data.message || "Failed to fetch pre-orders");
+      }
+    } catch (err) {
+      setError("Network error. Please check your connection.");
+      console.error("Fetch pre-orders error:", err);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  // Calculate statistics
+  const calculateStats = (orders: PreOrder[]) => {
+    const stats = {
+      total: orders.length,
+      pending: orders.filter((o) => o.status === "pending").length,
+      confirmed: orders.filter((o) => o.status === "confirmed").length,
+      completed: orders.filter((o) => o.status === "completed").length,
+      cancelled: orders.filter((o) => o.status === "cancelled").length,
+    };
+    setStats(stats);
+  };
+
+  // Filter orders
+  useEffect(() => {
+    let filtered = preOrders;
+
+    // Filter by status
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((order) => order.status === filterStatus);
+    }
+
+    // Filter by product
+    if (selectedProduct !== "all") {
+      filtered = filtered.filter(
+        (order) => order.productName === selectedProduct
+      );
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (order) =>
+          order.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by date range
+    if (dateRange.start && dateRange.end) {
+      filtered = filtered.filter((order) => {
+        const orderDate = new Date(order.createdAt);
+        const startDate = new Date(dateRange.start);
+        const endDate = new Date(dateRange.end);
+        return orderDate >= startDate && orderDate <= endDate;
+      });
+    }
+
+    setFilteredOrders(filtered);
+  }, [preOrders, filterStatus, selectedProduct, searchTerm, dateRange]);
+
+  // Update order status
+  const updateOrderStatus = async (userId: string, newStatus: string) => {
+    try {
+      const response = await fetch("/api/admin-api", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          userId,
+          status: newStatus,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(`Order status updated to ${newStatus}`);
+        setIsOpenModal(true);
+        fetchPreOrders(); // Refresh data
+        setTimeout(() => {
+          setSuccess(null);
+          setIsOpenModal(false);
+        }, 3000);
+      } else {
+        setError(data.message || "Failed to update status");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+      console.error("Update status error:", err);
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const headers = [
+      "ID",
+      "User ID",
+      "Product",
+      "Quantity",
+      "Price",
+      "Total",
+      "Status",
+      "Contact",
+      "Order Date",
+      "Notes",
+    ];
+    const csvData = [
+      headers.join(","),
+      ...filteredOrders.map((order) =>
+        [
+          order.id,
+          order.userId,
+          order.productName,
+          order.quantity,
+          order.price,
+          order.totalPrice,
+          order.status,
+          `"${order.contact}"`,
+          order.createdAt,
+          `"${order.notes || ""}"`,
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvData], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `preorders_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Logout function
   const logout = async () => {
     try {
       const res = await fetch("/api/auth/logout", {
@@ -100,7 +299,7 @@ const ShowPreOrderForAdmin = () => {
       });
       const data = await res.json();
       if (data.success) {
-        setSuccess(data.message);
+        setSuccess("Logout successful");
         setIsOpenModal(true);
         setTimeout(() => router.push("/auth/login"), 2000);
       }
@@ -109,6 +308,65 @@ const ShowPreOrderForAdmin = () => {
     }
   };
 
+  // Format functions
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "confirmed":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="w-4 h-4" />;
+      case "confirmed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <AlertTriangle className="w-4 h-4" />;
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPreOrders();
+    }
+  }, [isAuthenticated]);
+
+  // Loading state
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fefae0] to-[#faedcd]">
@@ -123,50 +381,51 @@ const ShowPreOrderForAdmin = () => {
     );
   }
 
-  if (
-    process.env.NEXT_PUBLIC_PRE_ORDER_FORM_STATUS === "private" &&
-    !(user.role === "admin")
-  ) {
+  // Access denied state
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fefae0] to-[#faedcd]">
         <div className="bg-white shadow-lg rounded-xl p-8 max-w-md mx-4 text-center">
           <div className="text-red-500 mb-4">
-            <svg
-              className="w-16 h-16 mx-auto"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m0 0v2m0-2h2m-2 0H10m9-7a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <AlertTriangle className="w-16 h-16 mx-auto" />
           </div>
           <h2 className="text-2xl font-bold text-[#606c38] mb-4">
             Akses Ditolak
           </h2>
-          <p className="text-[#606c38] mb-6">Anda tidak memiliki aksesnya</p>
+          <p className="text-[#606c38] mb-6">{authError}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full min-h-screen bg-gradient-to-br from-[#fefae0] to-[#faedcd] relative">
+    <div className="min-h-screen bg-gradient-to-br h-full from-[#fefae0] to-[#faedcd] ">
+      {/* Navbar */}
       <Navbar user={user} onLogout={logout} />
 
-      {isOpenModal && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-in slide-in-from-top-2 duration-300">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl shadow-xl backdrop-blur-sm">
+      {/* Success/Error Messages */}
+      {(success || error) && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
+          <div
+            className={`${
+              success
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-red-50 border-red-200 text-red-800"
+            } border px-6 py-4 rounded-xl shadow-lg`}
+          >
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">{success}</span>
+              <div
+                className={`w-3 h-3 ${
+                  success ? "bg-green-500" : "bg-red-500"
+                } rounded-full animate-pulse`}
+              ></div>
+              <span className="font-medium">{success || error}</span>
               <button
-                onClick={() => setSuccess(null)}
-                className="ml-auto text-green-600 hover:text-green-800 transition-colors"
+                onClick={() => {
+                  setSuccess(null);
+                  setError(null);
+                }}
+                className="ml-auto hover:opacity-70 transition-opacity"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -175,7 +434,269 @@ const ShowPreOrderForAdmin = () => {
         </div>
       )}
 
-      <Footer />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-[#dda15e]/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#606c38]">
+                  Total Orders
+                </p>
+                <p className="text-2xl font-bold text-[#bc6c25]">
+                  {stats.total}
+                </p>
+              </div>
+              <Package className="w-8 h-8 text-[#dda15e]" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-yellow-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-yellow-700">Pending</p>
+                <p className="text-2xl font-bold text-yellow-800">
+                  {stats.pending}
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-700">Confirmed</p>
+                <p className="text-2xl font-bold text-blue-800">
+                  {stats.confirmed}
+                </p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-green-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-700">Completed</p>
+                <p className="text-2xl font-bold text-green-800">
+                  {stats.completed}
+                </p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-red-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-red-700">Cancelled</p>
+                <p className="text-2xl font-bold text-red-800">
+                  {stats.cancelled}
+                </p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Filters and Actions */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-[#dda15e]/20">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dda15e] focus:border-transparent outline-none"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <select
+                value={filterStatus}
+                onChange={(e) =>
+                  setFilterStatus(e.target.value as FilterStatus)
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dda15e] focus:border-transparent outline-none"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              {/* Product Filter */}
+              <select
+                value={selectedProduct}
+                onChange={(e) => setSelectedProduct(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dda15e] focus:border-transparent outline-none"
+              >
+                <option value="all">All Products</option>
+                <option value="sushi">Sushi</option>
+                <option value="jasuke">Jasuke</option>
+                <option value="milo">Es Milo</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={fetchPreOrders}
+                disabled={dataLoading}
+                className="flex items-center space-x-2 bg-[#dda15e] hover:bg-[#bc6c25] text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${dataLoading ? "animate-spin" : ""}`}
+                />
+                <span>Refresh</span>
+              </button>
+
+              <button
+                onClick={exportToCSV}
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                <Download className="w-4 h-4" />
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders Table */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#dda15e]/20">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-[#bc6c25]">
+              Pre-Orders ({filteredOrders.length})
+            </h2>
+          </div>
+
+          {dataLoading ? (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#dda15e] mb-4"></div>
+              <p className="text-[#606c38]">Loading orders...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="p-8 text-center">
+              <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No orders found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Order
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          #{order.id.slice(-6)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ID: {order.userId}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.productName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Qty: {order.quantity} x {formatPrice(order.price)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {order.contact}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {formatPrice(order.totalPrice)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {getStatusIcon(order.status)}
+                          <span className="capitalize">{order.status}</span>
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(order.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex space-x-2">
+                          {order.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  updateOrderStatus(order.userId, "confirmed")
+                                }
+                                className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md text-xs transition-colors"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() =>
+                                  updateOrderStatus(order.userId, "cancelled")
+                                }
+                                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md text-xs transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          )}
+                          {order.status === "confirmed" && (
+                            <button
+                              onClick={() =>
+                                updateOrderStatus(order.userId, "completed")
+                              }
+                              className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded-md text-xs transition-colors"
+                            >
+                              Complete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,7 +1,15 @@
 // components/pre-order/PreOrderCard.tsx
 "use client";
 import React from "react";
-import { Calendar, Package, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Package,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 
 type PreOrder = {
   id: string;
@@ -13,6 +21,7 @@ type PreOrder = {
   orderDate: string;
   notes?: string;
   status: string;
+  createdAt: string;
 };
 
 type PreOrderCardProps = {
@@ -30,22 +39,45 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
+    return new Date(dateString).toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
     });
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-[1px] border-yellow-300";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "confirmed":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "completed":
-        return "bg-green-100 text-green-800 border-[1px] border-green-300";
+        return "bg-green-100 text-green-800 border-green-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return "bg-gray-100 text-gray-800 border-[1px] border-gray-300";
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="w-4 h-4" />;
+      case "confirmed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <AlertTriangle className="w-4 h-4" />;
     }
   };
 
@@ -60,11 +92,22 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
           </h3>
         </div>
         <div
-          className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusStyle(
+          className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-semibold capitalize border ${getStatusColor(
             preOrder.status
           )}`}
         >
-          {preOrder.status}
+          {getStatusIcon(preOrder.status)}
+          <span>
+            {preOrder.status === "pending"
+              ? "Menunggu Konfirmasi"
+              : preOrder.status === "confirmed"
+              ? "Dikonfirmasi"
+              : preOrder.status === "completed"
+              ? "Selesai"
+              : preOrder.status === "cancelled"
+              ? "Dibatalkan"
+              : preOrder.status}
+          </span>
         </div>
       </div>
 
@@ -106,7 +149,7 @@ const PreOrderCard: React.FC<PreOrderCardProps> = ({ preOrder, onCancel }) => {
             <Calendar className="w-4 h-4" />
             <div>
               <p className="font-medium">Tanggal Pesan</p>
-              <p>{formatDate(preOrder.orderDate)}</p>
+              <p>{formatDate(preOrder.createdAt)}</p>
             </div>
           </div>
           <div>

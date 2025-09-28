@@ -14,6 +14,7 @@ type User = {
   username: string;
   email: string;
   isVerified: boolean;
+  role: string;
 };
 
 const page = () => {

@@ -14,6 +14,7 @@ type PreOrder = {
   orderDate: string;
   notes?: string;
   status: string;
+  createdAt: string;
 };
 
 type CancelModalState = {
@@ -154,7 +155,7 @@ const ShowPreOrder: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mb-20">
       {/* Header */}
       <div className="text-center mt-28">
         <div className="flex items-center justify-center space-x-3 mb-4">
