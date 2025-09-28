@@ -22,6 +22,7 @@ type PreOrder = {
   userId: string;
   contact: string;
   productName: string;
+  customerName: string;
   quantity: number;
   price: number;
   totalPrice: number;
@@ -613,6 +614,9 @@ const ShowPreOrderForAdmin = () => {
                       Order
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Product
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -641,6 +645,11 @@ const ShowPreOrderForAdmin = () => {
                         </div>
                         <div className="text-sm text-gray-500">
                           ID: {order.userId}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.customerName}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

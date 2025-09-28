@@ -428,7 +428,7 @@ const PreOrderForm = () => {
               rows={3}
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
-              placeholder="Tulis catatan tambahan jika ada..."
+              placeholder="Tulis catatan tambahan jika ada atau kamu bisa isi dengan lokasi pengambilan yang lebih rinci dan lain sebagainya"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#dda15e] focus:border-transparent outline-none transition-all duration-200 resize-none"
               disabled={loading}
             ></textarea>

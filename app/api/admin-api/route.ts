@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
       userId: order.userId,
       contact: order.contact,
       productName: order.productName,
+      customerName: order.customerName,
       quantity: order.quantity,
       price: order.price,
       totalPrice: order.totalPrice,

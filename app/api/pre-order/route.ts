@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productName, quantity, price, notes, contact } = body;
+    const { productName, quantity, price, notes, contact, customerName } = body;
 
     const parseQuality = parseInt(quantity);
 
@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     const newPreOrder = {
       userId: user.userId,
       contact: contact,
+      customerName: customerName,
       productName: sanitizeString(productName),
       quantity: parseQuality,
       price: parseFloat(price),

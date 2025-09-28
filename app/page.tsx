@@ -8,6 +8,7 @@ import KentangModal from "@/components/modals/KentangModal";
 import MiloModal from "@/components/modals/MiloModal";
 import JasukeModal from "@/components/modals/JasukeModal";
 import { Footer } from "@/components/helper/Footer";
+import Link from "next/link";
 
 type User = {
   id: string;
@@ -143,7 +144,7 @@ const page = () => {
       </div>
 
       {/* Produk */}
-      <div id="products" className="mb-80 scroll-mt-20 ">
+      <div id="products" className="mb-20 scroll-mt-20 ">
         <h1 className="text-center mb-32 text-4xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-tl from-[#dda15e] to-[#bc6c25]">
           Produk Kami
         </h1>
@@ -255,6 +256,15 @@ const page = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-center mb-80">
+        <Link
+          href="/pre-order/pre-order-form"
+          className="mt-5 bg-gradient-to-br from-[#dda15e] to-[#bc6c25] pl-5 pr-5 pt-3 pb-3 rounded-full font-bold text-[#fefae0] text-center cursor-pointer hover:scale-110 transition-all shadow-md hover:shadow-xl"
+        >
+          Lihat Produk Kami ✨
+        </Link>
       </div>
 
       {/* Lokasi Sekolah */}
