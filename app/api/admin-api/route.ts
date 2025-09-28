@@ -37,14 +37,21 @@ export async function GET(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Find pre-orders by user ID
-    const preOrders = await db
+    const { searchParams } = new URL(request.url);
+
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const rawOrders = await db
       .collection("preorders")
       .find()
+      .skip(skip)
+      .limit(limit)
       .sort({ createdAt: 1 })
       .toArray();
 
-    const formattedOrders = preOrders.map((order) => ({
+    const formattedOrders = rawOrders.map((order) => ({
       id: order._id.toString(),
       userId: order.userId,
       contact: order.contact,
@@ -52,15 +59,17 @@ export async function GET(request: NextRequest) {
       quantity: order.quantity,
       price: order.price,
       totalPrice: order.totalPrice,
-      orderDate: order.orderDate,
-      notes: order.notes,
+      notes: order.notes || "",
       status: order.status,
       createdAt: order.createdAt,
     }));
 
+    const totalCount = await db.collection("preorders").countDocuments();
+
     return NextResponse.json({
       success: true,
       data: formattedOrders,
+      totalCount,
       message: "Pre-orders retrieved successfully",
     });
   } catch (error) {

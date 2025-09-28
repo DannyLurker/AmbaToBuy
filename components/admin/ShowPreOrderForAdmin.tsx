@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import * as XLSX from "xlsx";
 import {
   Package,
   Search,
@@ -67,6 +68,12 @@ const ShowPreOrderForAdmin = () => {
     cancelled: 0,
   });
 
+  // Pagination
+  const searchParams = useSearchParams();
+  const initialPage = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
   // Authentication check
   useEffect(() => {
     const checkUserAuth = async () => {
@@ -129,21 +136,19 @@ const ShowPreOrderForAdmin = () => {
   }, [router]);
 
   // Fetch pre-orders
-  const fetchPreOrders = async () => {
+  const fetchPreOrders = async (page = 1) => {
     if (!isAuthenticated) return;
 
     setDataLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin-api", {
+      const response = await fetch(`/api/admin-api?page=${page}`, {
         method: "GET",
         credentials: "include",
       });
 
       const data = await response.json();
-
-      console.log(data);
 
       if (!data.success) {
         throw new Error(`Server error: ${response.status}`);
@@ -151,6 +156,13 @@ const ShowPreOrderForAdmin = () => {
 
       if (data.success) {
         setPreOrders(data.data);
+
+        // hitung total halaman dari total pre-order
+        // → backend harus kirim total count
+        if (data.totalCount) {
+          setTotalPages(Math.ceil(data.totalCount / limit));
+        }
+
         calculateStats(data.data);
       } else {
         setError(data.message || "Failed to fetch pre-orders");
@@ -250,7 +262,7 @@ const ShowPreOrderForAdmin = () => {
   };
 
   // Export to CSV
-  const exportToCSV = () => {
+  const exportToExcel = () => {
     const headers = [
       "ID",
       "User ID",
@@ -263,31 +275,33 @@ const ShowPreOrderForAdmin = () => {
       "Order Date",
       "Notes",
     ];
-    const csvData = [
-      headers.join(","),
-      ...filteredOrders.map((order) =>
-        [
-          order.id,
-          order.userId,
-          order.productName,
-          order.quantity,
-          order.price,
-          order.totalPrice,
-          order.status,
-          `"${order.contact}"`,
-          order.createdAt,
-          `"${order.notes || ""}"`,
-        ].join(",")
-      ),
-    ].join("\n");
 
-    const blob = new Blob([csvData], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `preorders_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const worksheetData = [
+      headers,
+      ...filteredOrders.map((order) => [
+        order.id,
+        order.userId,
+        order.productName,
+        order.quantity,
+        order.price,
+        order.totalPrice,
+        order.status,
+        order.contact,
+        new Date(order.createdAt).toLocaleString(), // biar rapi
+        order.notes || "",
+      ]),
+    ];
+
+    // buat worksheet dan workbook
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PreOrders");
+
+    // export jadi file .xlsx
+    XLSX.writeFile(
+      workbook,
+      `preorders_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   // Logout function
@@ -360,11 +374,16 @@ const ShowPreOrderForAdmin = () => {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    router.push(`?page=${newPage}`);
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
-      fetchPreOrders();
+      fetchPreOrders(currentPage);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage]);
 
   // Loading state
   if (authLoading) {
@@ -546,7 +565,7 @@ const ShowPreOrderForAdmin = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={fetchPreOrders}
+                onClick={() => fetchPreOrders(2)}
                 disabled={dataLoading}
                 className="flex items-center space-x-2 bg-[#dda15e] hover:bg-[#bc6c25] text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
               >
@@ -557,11 +576,11 @@ const ShowPreOrderForAdmin = () => {
               </button>
 
               <button
-                onClick={exportToCSV}
+                onClick={exportToExcel}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 <Download className="w-4 h-4" />
-                <span>Export CSV</span>
+                <span>Export To Excel</span>
               </button>
             </div>
           </div>
@@ -695,6 +714,40 @@ const ShowPreOrderForAdmin = () => {
               </table>
             </div>
           )}
+        </div>
+
+        <div className="flex justify-center items-center space-x-2 py-4">
+          <button
+            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => handlePageChange(i + 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === i + 1
+                  ? "bg-[#dda15e] text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() =>
+              handlePageChange(Math.min(currentPage + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
