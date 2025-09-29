@@ -267,6 +267,7 @@ const ShowPreOrderForAdmin = () => {
     const headers = [
       "ID",
       "User ID",
+      "Customer Name",
       "Product",
       "Quantity",
       "Price",
@@ -282,6 +283,7 @@ const ShowPreOrderForAdmin = () => {
       ...filteredOrders.map((order) => [
         order.id,
         order.userId,
+        order.customerName,
         order.productName,
         order.quantity,
         order.price,
