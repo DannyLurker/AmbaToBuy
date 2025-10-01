@@ -20,7 +20,7 @@ const getUserFromToken = (request: NextRequest) => {
   }
 };
 
-// GET - Ambil semua pre-order user
+// GET - Ambil semua pre-order
 export async function GET(request: NextRequest) {
   let client;
 
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-//PATCH
+// PATCH - Update status berdasarkan orderId (bukan userId)
 export async function PATCH(request: NextRequest) {
   let client;
 
@@ -98,15 +98,40 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { status, userId } = body;
+    const { status, orderId } = body;
+
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, message: "Order ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!["pending", "confirmed", "completed", "cancelled"].includes(status)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid status" },
+        { status: 400 }
+      );
+    }
 
     // Connect to database
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
+    // Update berdasarkan order ID (_id), bukan userId
     const result = await db
       .collection("preorders")
-      .updateOne({ userId }, { $set: { status } }, { upsert: false });
+      .updateOne(
+        { _id: new ObjectId(orderId) },
+        { $set: { status, updatedAt: new Date().toISOString() } }
+      );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Order not found" },
+        { status: 404 }
+      );
+    }
 
     const responseData = {
       matchedCount: result.matchedCount,
@@ -117,7 +142,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: responseData,
-      message: "Pre-order updated successfully",
+      message: "Pre-order status updated successfully",
     });
   } catch (error) {
     console.error("Update pre-order error:", error);
@@ -157,10 +182,9 @@ export async function DELETE(request: NextRequest) {
     const { client: dbClient, db } = await connectToDatabase();
     client = dbClient;
 
-    // Find and update the pre-order
+    // Find and delete the pre-order
     const result = await db.collection("preorders").deleteOne({
       _id: new ObjectId(orderId),
-      userId: user.userId,
     });
 
     if (result.deletedCount === 0) {
@@ -172,10 +196,10 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Pre-order cancelled (deleted) successfully",
+      message: "Pre-order deleted successfully",
     });
   } catch (error) {
-    console.error("Cancel pre-order error:", error);
+    console.error("Delete pre-order error:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

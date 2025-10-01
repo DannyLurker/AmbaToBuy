@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import Navbar from "../helper/Navbar";
+import ConfirmationModal from "../modals/ConfirmationModal";
 
 // Types
 type PreOrder = {
@@ -41,6 +42,8 @@ type User = {
 
 type FilterStatus = "all" | "pending" | "confirmed" | "completed" | "cancelled";
 
+type ModalType = "export" | "updateStatus" | null;
+
 const ShowPreOrderForAdmin = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -52,7 +55,15 @@ const ShowPreOrderForAdmin = () => {
   const [authError, setAuthError] = useState("");
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isOpenModal, setIsOpenModal] = useState(false);
+
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<
+    "export" | "confirm" | "complete" | "cancel"
+  >("export");
+  const [selectedOrder, setSelectedOrder] = useState<PreOrder | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [isModalLoading, setIsModalLoading] = useState(false);
 
   // Filter and Search States
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,6 +86,7 @@ const ShowPreOrderForAdmin = () => {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
+
   // Authentication check
   useEffect(() => {
     const checkUserAuth = async () => {
@@ -158,8 +170,6 @@ const ShowPreOrderForAdmin = () => {
       if (data.success) {
         setPreOrders(data.data);
 
-        // hitung total halaman dari total pre-order
-        // → backend harus kirim total count
         if (data.totalCount) {
           setTotalPages(Math.ceil(data.totalCount / limit));
         }
@@ -192,19 +202,16 @@ const ShowPreOrderForAdmin = () => {
   useEffect(() => {
     let filtered = preOrders;
 
-    // Filter by status
     if (filterStatus !== "all") {
       filtered = filtered.filter((order) => order.status === filterStatus);
     }
 
-    // Filter by product
     if (selectedProduct !== "all") {
       filtered = filtered.filter(
         (order) => order.productName === selectedProduct
       );
     }
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
@@ -215,7 +222,6 @@ const ShowPreOrderForAdmin = () => {
       );
     }
 
-    // Filter by date range
     if (dateRange.start && dateRange.end) {
       filtered = filtered.filter((order) => {
         const orderDate = new Date(order.createdAt);
@@ -228,8 +234,28 @@ const ShowPreOrderForAdmin = () => {
     setFilteredOrders(filtered);
   }, [preOrders, filterStatus, selectedProduct, searchTerm, dateRange]);
 
+  // Open modal for status update
+  const openStatusModal = (order: PreOrder, newStatus: string) => {
+    setSelectedOrder(order);
+    setSelectedStatus(newStatus);
+
+    if (newStatus === "confirmed") {
+      setModalType("confirm");
+    } else if (newStatus === "completed") {
+      setModalType("complete");
+    } else if (newStatus === "cancelled") {
+      setModalType("cancel");
+    }
+
+    setIsModalOpen(true);
+  };
+
   // Update order status
-  const updateOrderStatus = async (userId: string, newStatus: string) => {
+  const updateOrderStatus = async () => {
+    if (!selectedOrder) return;
+
+    setIsModalLoading(true);
+
     try {
       const response = await fetch("/api/admin-api", {
         method: "PATCH",
@@ -238,73 +264,100 @@ const ShowPreOrderForAdmin = () => {
         },
         credentials: "include",
         body: JSON.stringify({
-          userId,
-          status: newStatus,
+          orderId: selectedOrder.id,
+          status: selectedStatus,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Order status updated to ${newStatus}`);
-        setIsOpenModal(true);
-        fetchPreOrders(); // Refresh data
-        setTimeout(() => {
-          setSuccess(null);
-          setIsOpenModal(false);
-        }, 3000);
+        setSuccess(`Order status updated to ${selectedStatus}`);
+        setIsModalOpen(false);
+        fetchPreOrders(currentPage);
+        setTimeout(() => setSuccess(null), 3000);
       } else {
         setError(data.message || "Failed to update status");
       }
     } catch (err) {
       setError("Network error. Please try again.");
       console.error("Update status error:", err);
+    } finally {
+      setIsModalLoading(false);
     }
   };
 
-  // Export to CSV
-  const exportToExcel = () => {
-    const headers = [
-      "ID",
-      "User ID",
-      "Customer Name",
-      "Product",
-      "Quantity",
-      "Price",
-      "Total",
-      "Status",
-      "Contact",
-      "Order Date",
-      "Notes",
-    ];
+  // Export to Excel with confirmation modal
+  const openExportModal = () => {
+    setModalType("export");
+    setIsModalOpen(true);
+  };
 
-    const worksheetData = [
-      headers,
-      ...filteredOrders.map((order) => [
-        order.id,
-        order.userId,
-        order.customerName,
-        order.productName,
-        order.quantity,
-        order.price,
-        order.totalPrice,
-        order.status,
-        order.contact,
-        new Date(order.createdAt).toLocaleString(), // biar rapi
-        order.notes || "",
-      ]),
-    ];
+  const exportToExcel = async () => {
+    setIsModalLoading(true);
 
-    // buat worksheet dan workbook
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "PreOrders");
+    try {
+      const response = await fetch("/api/convert-to-excel", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
-    // export jadi file .xlsx
-    XLSX.writeFile(
-      workbook,
-      `preorders_${new Date().toISOString().split("T")[0]}.xlsx`
-    );
+      const result = await response.json();
+      const orders = result.data;
+
+      const headers = [
+        "ID",
+        "User ID",
+        "Customer Name",
+        "Product",
+        "Quantity",
+        "Price",
+        "Total",
+        "Status",
+        "Contact",
+        "Order Date",
+        "Notes",
+      ];
+
+      const worksheetData = [
+        headers,
+        ...orders.map((order: PreOrder) => [
+          order.id,
+          order.userId,
+          order.customerName,
+          order.productName,
+          order.quantity,
+          order.price,
+          order.totalPrice,
+          order.status,
+          order.contact,
+          new Date(order.createdAt).toLocaleString(),
+          order.notes || "",
+        ]),
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "PreOrders");
+
+      XLSX.writeFile(
+        workbook,
+        `preorders_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+
+      setSuccess("Excel file exported successfully!");
+      setIsModalOpen(false);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to export Excel file");
+      setIsModalOpen(false);
+    } finally {
+      setIsModalLoading(false);
+    }
   };
 
   // Logout function
@@ -317,7 +370,6 @@ const ShowPreOrderForAdmin = () => {
       const data = await res.json();
       if (data.success) {
         setSuccess("Logout successful");
-        setIsOpenModal(true);
         setTimeout(() => router.push("/auth/login"), 2000);
       }
     } catch (e) {
@@ -421,7 +473,7 @@ const ShowPreOrderForAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br h-full from-[#fefae0] to-[#faedcd] ">
+    <div className="min-h-screen bg-gradient-to-br h-full from-[#fefae0] to-[#faedcd]">
       {/* Navbar */}
       <Navbar user={user} onLogout={logout} />
 
@@ -455,6 +507,18 @@ const ShowPreOrderForAdmin = () => {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={modalType === "export" ? exportToExcel : updateOrderStatus}
+        type={modalType}
+        productName={selectedOrder?.productName}
+        orderId={selectedOrder?.id.slice(-6)}
+        customerName={selectedOrder?.customerName}
+        isLoading={isModalLoading}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         {/* Statistics Cards */}
@@ -568,7 +632,7 @@ const ShowPreOrderForAdmin = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={() => fetchPreOrders(2)}
+                onClick={() => fetchPreOrders(currentPage)}
                 disabled={dataLoading}
                 className="flex items-center space-x-2 bg-[#dda15e] hover:bg-[#bc6c25] text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
               >
@@ -579,7 +643,7 @@ const ShowPreOrderForAdmin = () => {
               </button>
 
               <button
-                onClick={exportToExcel}
+                onClick={openExportModal}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 <Download className="w-4 h-4" />
@@ -691,7 +755,7 @@ const ShowPreOrderForAdmin = () => {
                             <>
                               <button
                                 onClick={() =>
-                                  updateOrderStatus(order.userId, "confirmed")
+                                  openStatusModal(order, "confirmed")
                                 }
                                 className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md text-xs transition-colors"
                               >
@@ -699,7 +763,7 @@ const ShowPreOrderForAdmin = () => {
                               </button>
                               <button
                                 onClick={() =>
-                                  updateOrderStatus(order.userId, "cancelled")
+                                  openStatusModal(order, "cancelled")
                                 }
                                 className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md text-xs transition-colors"
                               >
@@ -710,7 +774,7 @@ const ShowPreOrderForAdmin = () => {
                           {order.status === "confirmed" && (
                             <button
                               onClick={() =>
-                                updateOrderStatus(order.userId, "completed")
+                                openStatusModal(order, "completed")
                               }
                               className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded-md text-xs transition-colors"
                             >
