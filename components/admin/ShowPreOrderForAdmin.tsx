@@ -215,6 +215,7 @@ const ShowPreOrderForAdmin = () => {
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
+          order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
