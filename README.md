@@ -1,6 +1,6 @@
 # 🍔 AmbaToBuy - Food and Beverage Pre-Order Platform
 
-A dedicated pre-order management system developed for SMK Advent Batam to streamline student meal and drink purchases.
+A pre-order management system developed for a bazaar event.
 
 ## 🔗 Live Project
 **Check it out:** [AmbaToBuy](https://amba-to-buy.vercel.app)
